@@ -1,0 +1,54 @@
+version: '3.5'
+
+services:
+  php-apache:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-apache
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 8080:80
+      - 444:443
+    environment:
+      SERVICE_NAME: php-apache
+      SERVICE_TAGS: dev
+    working_dir: /var/www/html/
+    volumes:
+      - ./distr/:/var/www/html/
+    networks:
+      - clientbase
+
+  mysql5.7:
+    image: mysql:5.7
+    container_name: mysql5.7
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3357:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mysql5.7
+    volumes:
+      - ./conf/mysql.cnf:/etc/mysql/my.cnf
+      - ./mysql5.7-data:/var/lib/mysql/
+    networks:
+      - clientbase
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 8081:8080
+    networks:
+      - clientbase
+
+networks:
+  clientbase:
+    driver: bridge
+
+volumes:
+  mysql5.7-data:
+    driver: local
