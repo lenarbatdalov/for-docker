@@ -1,0 +1,140 @@
+version: '3.5'
+
+services:
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - 8081:8080
+      
+  mysql5:
+    image: mysql:5.7
+    container_name: mysql5
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3357:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mysql5
+    volumes:
+      - ./config/mysql5.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ./mysql5:/var/lib/mysql/
+
+  # не заходил в админере, зашел
+  # mysql -u root --password=root distr -h 172.17.0.1 -P 3380
+  # и все зароботало
+  mysql8:
+    image: mysql:8.0.21
+    container_name: mysql8
+    restart: unless-stopped
+    tty: true
+    command: --sql_mode=''
+    ports:
+      - 3380:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mysql8
+    volumes:
+      # - ./config/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      # - ./config/mysql8.cnf:/etc/mysql/my.cnf
+      - ./mysql8:/var/lib/mysql/
+
+  mariadb101:
+    image: mariadb:10.1
+    container_name: mariadb101
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3311:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mariadb101
+    volumes:
+      - ./mariadb101:/var/lib/mysql/
+
+  mariadb103:
+    image: mariadb:10.3
+    container_name: mariadb103
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3313:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mariadb103
+    volumes:
+      - ./mariadb103:/var/lib/mysql/
+
+  mariadb105:
+    image: mariadb:10.5
+    container_name: mariadb105
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3315:3306
+    environment:
+      MYSQL_DATABASE: distr
+      MYSQL_ROOT_PASSWORD: root
+      SERVICE_NAME: mariadb105
+    volumes:
+      - ./mariadb105:/var/lib/mysql/
+
+  php:
+    build:
+      context: ./php/7.4.11-fpm/
+      dockerfile: Dockerfile
+    container_name: php
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: php
+      SERVICE_TAGS: dev
+    working_dir: /var/www/html/
+    volumes:
+      - /srv/http/clientbase/docker-cb-distr/:/var/www/html/
+    networks:
+      - net-1
+
+  nginx-server:
+    image: nginx
+    container_name: nginx-server
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 8080:80
+      - 444:443
+    volumes:
+      - /srv/http/clientbase/docker-cb-distr/:/var/www/html/
+      - ./config/app.conf:/etc/nginx/conf.d/app.conf:ro
+    networks:
+      - net-1
+
+#   php-apache:
+#     build:
+#       context: ./php/7.2.34-apache/
+#       dockerfile: Dockerfile
+#     container_name: php-apache
+#     restart: unless-stopped
+#     tty: true
+#     ports:
+#       - 8080:80
+#       - 444:443
+#     environment:
+#       SERVICE_NAME: php-apache
+#       SERVICE_TAGS: dev
+#     working_dir: /var/www/html/
+#     volumes:
+#       - /srv/http/clientbase/docker-cb-distr/:/var/www/html/
+
+networks:
+  net-1:
+    driver: bridge
+
+# volumes:
+#   mysql8-data:
+#     driver: local
